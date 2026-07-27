@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Navigation, Compass, X, Bed, Bath, Maximize2, ExternalLink, Layers } from 'lucide-react';
+import { MapPin, Navigation, Compass, X, Bed, Bath, Maximize2, ExternalLink } from 'lucide-react';
 import { Property } from '@/types/property';
 import { formatPrice } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
@@ -15,18 +15,17 @@ interface PropertyMapProps {
 
 export const PropertyMap: React.FC<PropertyMapProps> = ({
   properties,
-  className = 'min-h-[650px]'
+  className = 'items-start'
 }) => {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(
     properties[0] || null
   );
-  const [mapType, setMapType] = useState<'streets' | 'satellite'>('streets');
 
-  // Center coordinates based on selected property or default to Manhattan
+  // Center coordinates based on selected property or default
   const currentLat = selectedProperty?.location.lat || 40.7128;
   const currentLng = selectedProperty?.location.lng || -74.0060;
 
-  // Convert lat/lng coordinates to pin positions on canvas
+  // Convert lat/lng coordinates to relative percentage positions on canvas
   const getCoordinates = (p: Property, idx: number) => {
     const col = idx % 5;
     const row = Math.floor(idx / 5) % 4;
@@ -36,13 +35,13 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
   };
 
   return (
-    <div className={`grid grid-cols-1 lg:grid-cols-12 gap-6 ${className}`}>
-      {/* Left Column: Property List & Selected Card Details (5 cols) */}
-      <div className="lg:col-span-5 space-y-4 max-h-[650px] overflow-y-auto pr-2 custom-scrollbar">
+    <div className={`grid grid-cols-1 lg:grid-cols-12 gap-6 relative ${className}`}>
+      {/* Left Column: Scrollable Property Cards List (5 cols) */}
+      <div className="lg:col-span-5 space-y-4 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
         {selectedProperty && (
           <div className="bg-white rounded-3xl p-5 border-2 border-[#B88746] shadow-xl space-y-4 relative animate-in fade-in duration-300">
             <div className="flex items-center justify-between text-xs text-[#B88746] font-bold">
-              <span>Selected Map Property</span>
+              <span>Selected Map Pin</span>
               <button
                 onClick={() => setSelectedProperty(null)}
                 className="text-slate-400 hover:text-black p-1"
@@ -97,19 +96,20 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
           </div>
         )}
 
-        {/* Scrollable list of properties */}
+        {/* Scrollable list of property cards synced with map pins */}
         <div className="space-y-3">
           <h5 className="text-xs font-bold uppercase tracking-wider text-slate-400 pl-1">
-            Properties on Map ({properties.length})
+            Hover or Scroll Properties ({properties.length})
           </h5>
           {properties.map((p) => {
             const isSelected = selectedProperty?.id === p.id;
             return (
               <div
                 key={p.id}
+                onMouseEnter={() => setSelectedProperty(p)}
                 onClick={() => setSelectedProperty(p)}
                 className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 bg-white ${
-                  isSelected ? 'border-[#B88746] shadow-md bg-[#B88746]/5' : 'border-slate-200 hover:border-slate-300'
+                  isSelected ? 'border-[#B88746] shadow-md bg-[#B88746]/10 scale-[1.01]' : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
@@ -128,76 +128,66 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
         </div>
       </div>
 
-      {/* Right Column: Live OpenStreetMap Tile View + Pins Overlay (7 cols) */}
-      <div className="lg:col-span-7 relative w-full h-[650px] rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-slate-100">
-        {/* Real OpenStreetMap Live Tiles Iframe Layer */}
-        <iframe
-          title="OpenStreetMap Live Interactive Map"
-          width="100%"
-          height="100%"
-          frameBorder="0"
-          scrolling="no"
-          src={`https://www.openstreetmap.org/export/embed.html?bbox=${currentLng - 0.08}%2C${currentLat - 0.05}%2C${currentLng + 0.08}%2C${currentLat + 0.05}&layer=mapnik&marker=${currentLat}%2C${currentLng}`}
-          className="w-full h-full filter brightness-95 contrast-105 pointer-events-auto"
-        />
+      {/* Right Column: Sticky Live Map Container synced as user scrolls up & down (7 cols) */}
+      <div className="lg:col-span-7 sticky top-28">
+        <div className="relative w-full h-[650px] rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-slate-100">
+          {/* Real OpenStreetMap Live Tiles Layer */}
+          <iframe
+            title="OpenStreetMap Live Interactive Map"
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            scrolling="no"
+            src={`https://www.openstreetmap.org/export/embed.html?bbox=${currentLng - 0.08}%2C${currentLat - 0.05}%2C${currentLng + 0.08}%2C${currentLat + 0.05}&layer=mapnik&marker=${currentLat}%2C${currentLng}`}
+            className="w-full h-full filter brightness-95 contrast-105 pointer-events-auto transition-all duration-500"
+          />
 
-        {/* Floating Controls Overlay */}
-        <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
-          <div className="bg-[#0B1220]/90 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full text-white text-xs flex items-center gap-2 shadow-lg pointer-events-auto">
-            <Compass className="w-4 h-4 text-[#B88746]" />
-            <span className="font-semibold">OpenStreetMap Live Engine</span>
+          {/* Floating Header Label */}
+          <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-[#0B1220]/90 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full text-white text-xs shadow-lg">
+            <Compass className="w-4 h-4 text-[#B88746] animate-spin-slow" />
+            <span className="font-semibold">Synchronized Map Tracker</span>
           </div>
 
-          <div className="flex bg-[#0B1220]/90 backdrop-blur-md border border-white/20 p-1 rounded-full text-xs shadow-lg pointer-events-auto">
-            <button
-              onClick={() => setMapType('streets')}
-              className={`px-3 py-1 rounded-full transition-all ${
-                mapType === 'streets' ? 'bg-[#B88746] text-white font-bold' : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Street View
-            </button>
-          </div>
-        </div>
+          {/* Interactive Synchronized Pins Overlay */}
+          <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
+            {properties.map((p, idx) => {
+              const isSelected = selectedProperty?.id === p.id;
+              const pos = getCoordinates(p, idx);
 
-        {/* Interactive Pins Overlay on Map */}
-        <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
-          {properties.map((p, idx) => {
-            const isSelected = selectedProperty?.id === p.id;
-            const pos = getCoordinates(p, idx);
-
-            return (
-              <div
-                key={p.id}
-                onClick={() => setSelectedProperty(p)}
-                style={{ position: 'absolute', left: pos.left, top: pos.top }}
-                className={`transform -translate-x-1/2 -translate-y-1/2 cursor-pointer pointer-events-auto transition-all duration-300 ${
-                  isSelected ? 'scale-125 z-30' : 'hover:scale-110 z-20'
-                }`}
-              >
+              return (
                 <div
-                  className={`px-3 py-1.5 rounded-full font-serif text-xs font-bold shadow-2xl border transition-all flex items-center gap-1.5 select-none ${
-                    isSelected
-                      ? 'bg-[#B88746] text-white border-white ring-4 ring-[#B88746]/40'
-                      : 'bg-[#111827]/95 backdrop-blur-md text-slate-100 border-white/30 hover:border-[#B88746] hover:bg-[#0B1220]'
+                  key={p.id}
+                  onClick={() => setSelectedProperty(p)}
+                  onMouseEnter={() => setSelectedProperty(p)}
+                  style={{ position: 'absolute', left: pos.left, top: pos.top }}
+                  className={`transform -translate-x-1/2 -translate-y-1/2 cursor-pointer pointer-events-auto transition-all duration-300 ${
+                    isSelected ? 'scale-125 z-30 animate-bounce' : 'hover:scale-110 z-20'
                   }`}
                 >
-                  <MapPin className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-[#B88746]'}`} />
-                  <span>{formatPrice(p.price, p.currency, p.period)}</span>
+                  <div
+                    className={`px-3 py-1.5 rounded-full font-serif text-xs font-bold shadow-2xl border transition-all flex items-center gap-1.5 select-none ${
+                      isSelected
+                        ? 'bg-[#B88746] text-white border-white ring-4 ring-[#B88746]/40 shadow-2xl'
+                        : 'bg-[#111827]/95 backdrop-blur-md text-slate-100 border-white/30 hover:border-[#B88746] hover:bg-[#0B1220]'
+                    }`}
+                  >
+                    <MapPin className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-[#B88746]'}`} />
+                    <span>{formatPrice(p.price, p.currency, p.period)}</span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
 
-        {/* Bottom Helper Bar */}
-        <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between bg-[#0B1220]/90 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-full text-slate-200 text-xs shadow-lg">
-          <span className="flex items-center gap-1.5">
-            <Navigation className="w-3.5 h-3.5 text-[#B88746]" /> Click price tags to focus properties
-          </span>
-          <span className="font-mono text-[#B88746] font-bold">
-            {properties.length} Active Pins
-          </span>
+          {/* Bottom Synchronized Helper */}
+          <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between bg-[#0B1220]/90 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-full text-slate-200 text-xs shadow-lg">
+            <span className="flex items-center gap-1.5">
+              <Navigation className="w-3.5 h-3.5 text-[#B88746]" /> Map follows selected property pin
+            </span>
+            <span className="font-mono text-[#B88746] font-bold">
+              {selectedProperty ? selectedProperty.title : 'Select property'}
+            </span>
+          </div>
         </div>
       </div>
     </div>
