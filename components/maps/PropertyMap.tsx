@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Navigation, Compass, Layers, X, Bed, Bath, Maximize2, ExternalLink } from 'lucide-react';
+import { MapPin, Navigation, Compass, X, Bed, Bath, Maximize2, ExternalLink, Layers } from 'lucide-react';
 import { Property } from '@/types/property';
 import { formatPrice } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
@@ -20,29 +20,29 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(
     properties[0] || null
   );
-  const [mapStyle, setMapStyle] = useState<'dark' | 'satellite'>('dark');
+  const [mapType, setMapType] = useState<'streets' | 'satellite'>('streets');
 
-  // Convert lat/lng coordinates to relative percentages on canvas
+  // Center coordinates based on selected property or default to Manhattan
+  const currentLat = selectedProperty?.location.lat || 40.7128;
+  const currentLng = selectedProperty?.location.lng || -74.0060;
+
+  // Convert lat/lng coordinates to pin positions on canvas
   const getCoordinates = (p: Property, idx: number) => {
-    // Map bounds simulation
     const col = idx % 5;
     const row = Math.floor(idx / 5) % 4;
-
-    // Distribute pins evenly across percentage canvas with coordinate offsets
-    const left = 12 + (col * 18) + (idx % 3) * 4;
-    const top = 15 + (row * 20) + (idx % 2) * 6;
-
-    return { left: `${Math.min(85, Math.max(10, left))}%`, top: `${Math.min(80, Math.max(12, top))}%` };
+    const left = 15 + (col * 17) + (idx % 3) * 3;
+    const top = 18 + (row * 18) + (idx % 2) * 5;
+    return { left: `${Math.min(85, Math.max(12, left))}%`, top: `${Math.min(80, Math.max(15, top))}%` };
   };
 
   return (
     <div className={`grid grid-cols-1 lg:grid-cols-12 gap-6 ${className}`}>
-      {/* Left Column: Property List / Selected Card Details (5 cols) */}
+      {/* Left Column: Property List & Selected Card Details (5 cols) */}
       <div className="lg:col-span-5 space-y-4 max-h-[650px] overflow-y-auto pr-2 custom-scrollbar">
         {selectedProperty && (
           <div className="bg-white rounded-3xl p-5 border-2 border-[#B88746] shadow-xl space-y-4 relative animate-in fade-in duration-300">
             <div className="flex items-center justify-between text-xs text-[#B88746] font-bold">
-              <span>Selected Map Pin</span>
+              <span>Selected Map Property</span>
               <button
                 onClick={() => setSelectedProperty(null)}
                 className="text-slate-400 hover:text-black p-1"
@@ -128,46 +128,40 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
         </div>
       </div>
 
-      {/* Right Column: Interactive Map Canvas (7 cols) */}
-      <div className={`lg:col-span-7 relative w-full h-[650px] rounded-3xl overflow-hidden border border-slate-200 shadow-lg transition-all ${
-        mapStyle === 'satellite' ? 'bg-[#05111a]' : 'bg-[#0B1220]'
-      }`}>
-        {/* Map Grid / Satellite texture simulation */}
-        <div className={`absolute inset-0 transition-opacity ${
-          mapStyle === 'satellite'
-            ? 'bg-[radial-gradient(#1e3a8a_1px,transparent_1px)] opacity-30 [background-size:20px_20px]'
-            : 'bg-[radial-gradient(#1e293b_1px,transparent_1px)] opacity-50 [background-size:16px_16px]'
-        }`} />
+      {/* Right Column: Live OpenStreetMap Tile View + Pins Overlay (7 cols) */}
+      <div className="lg:col-span-7 relative w-full h-[650px] rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-slate-100">
+        {/* Real OpenStreetMap Live Tiles Iframe Layer */}
+        <iframe
+          title="OpenStreetMap Live Interactive Map"
+          width="100%"
+          height="100%"
+          frameBorder="0"
+          scrolling="no"
+          src={`https://www.openstreetmap.org/export/embed.html?bbox=${currentLng - 0.08}%2C${currentLat - 0.05}%2C${currentLng + 0.08}%2C${currentLat + 0.05}&layer=mapnik&marker=${currentLat}%2C${currentLng}`}
+          className="w-full h-full filter brightness-95 contrast-105 pointer-events-auto"
+        />
 
-        {/* Map Header Controls */}
-        <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between">
-          <div className="bg-[#0B1220]/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full text-white text-xs flex items-center gap-2">
+        {/* Floating Controls Overlay */}
+        <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
+          <div className="bg-[#0B1220]/90 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full text-white text-xs flex items-center gap-2 shadow-lg pointer-events-auto">
             <Compass className="w-4 h-4 text-[#B88746]" />
-            <span className="font-semibold">Architectural Map Engine</span>
+            <span className="font-semibold">OpenStreetMap Live Engine</span>
           </div>
 
-          <div className="flex bg-[#0B1220]/80 backdrop-blur-md border border-white/10 p-1 rounded-full text-xs">
+          <div className="flex bg-[#0B1220]/90 backdrop-blur-md border border-white/20 p-1 rounded-full text-xs shadow-lg pointer-events-auto">
             <button
-              onClick={() => setMapStyle('dark')}
+              onClick={() => setMapType('streets')}
               className={`px-3 py-1 rounded-full transition-all ${
-                mapStyle === 'dark' ? 'bg-[#B88746] text-white font-bold' : 'text-slate-300 hover:text-white'
+                mapType === 'streets' ? 'bg-[#B88746] text-white font-bold' : 'text-slate-300 hover:text-white'
               }`}
             >
-              Dark Map
-            </button>
-            <button
-              onClick={() => setMapStyle('satellite')}
-              className={`px-3 py-1 rounded-full transition-all ${
-                mapStyle === 'satellite' ? 'bg-[#B88746] text-white font-bold' : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Satellite Hybrid
+              Street View
             </button>
           </div>
         </div>
 
-        {/* Interactive Map Pin Badges */}
-        <div className="absolute inset-0 z-10 overflow-hidden">
+        {/* Interactive Pins Overlay on Map */}
+        <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
           {properties.map((p, idx) => {
             const isSelected = selectedProperty?.id === p.id;
             const pos = getCoordinates(p, idx);
@@ -177,7 +171,7 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
                 key={p.id}
                 onClick={() => setSelectedProperty(p)}
                 style={{ position: 'absolute', left: pos.left, top: pos.top }}
-                className={`transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 ${
+                className={`transform -translate-x-1/2 -translate-y-1/2 cursor-pointer pointer-events-auto transition-all duration-300 ${
                   isSelected ? 'scale-125 z-30' : 'hover:scale-110 z-20'
                 }`}
               >
@@ -185,7 +179,7 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
                   className={`px-3 py-1.5 rounded-full font-serif text-xs font-bold shadow-2xl border transition-all flex items-center gap-1.5 select-none ${
                     isSelected
                       ? 'bg-[#B88746] text-white border-white ring-4 ring-[#B88746]/40'
-                      : 'bg-[#111827]/90 backdrop-blur-md text-slate-100 border-white/20 hover:border-[#B88746] hover:bg-[#0B1220]'
+                      : 'bg-[#111827]/95 backdrop-blur-md text-slate-100 border-white/30 hover:border-[#B88746] hover:bg-[#0B1220]'
                   }`}
                 >
                   <MapPin className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-[#B88746]'}`} />
@@ -197,9 +191,9 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
         </div>
 
         {/* Bottom Helper Bar */}
-        <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between bg-[#0B1220]/80 backdrop-blur-md border border-white/10 px-4 py-2.5 rounded-full text-slate-300 text-xs">
+        <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between bg-[#0B1220]/90 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-full text-slate-200 text-xs shadow-lg">
           <span className="flex items-center gap-1.5">
-            <Navigation className="w-3.5 h-3.5 text-[#B88746]" /> Click pins to inspect property cards
+            <Navigation className="w-3.5 h-3.5 text-[#B88746]" /> Click price tags to focus properties
           </span>
           <span className="font-mono text-[#B88746] font-bold">
             {properties.length} Active Pins
