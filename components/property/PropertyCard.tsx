@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Bed, Bath, Maximize2, Heart, Scale, ShieldCheck, MapPin, Sparkles } from 'lucide-react';
+import { Bed, Bath, Maximize2, Heart, Scale, ShieldCheck, MapPin } from 'lucide-react';
 import { Property } from '@/types/property';
 import { Badge } from '@/components/ui/Badge';
 import { formatPrice } from '@/lib/utils';
@@ -51,20 +51,33 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, layout = '
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
 
-          {/* Badges */}
-          <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-            <Badge variant={property.purpose === 'rent' ? 'green' : 'gold'}>
-              For {property.purpose}
-            </Badge>
-            {property.isLuxury && <Badge variant="dark">Luxury</Badge>}
+          {/* Badges - bounded to avoid overlapping with right action buttons */}
+          <div className="absolute top-4 left-4 right-24 flex flex-wrap gap-1.5 z-10 pointer-events-none">
+            <div className="pointer-events-auto">
+              <Badge variant={property.purpose === 'rent' ? 'green' : 'gold'}>
+                For {property.purpose}
+              </Badge>
+            </div>
+            {property.isLuxury && (
+              <div className="pointer-events-auto">
+                <Badge variant="dark">Luxury</Badge>
+              </div>
+            )}
+            {property.isVerified && (
+              <div className="pointer-events-auto">
+                <span className="inline-flex items-center gap-1 bg-emerald-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                  <ShieldCheck className="w-3 h-3" /> Verified
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Favorite & Compare Overlay Buttons */}
-          <div className="absolute top-4 right-4 flex items-center gap-2">
+          <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
             <button
               onClick={handleCompareClick}
-              className={`p-2.5 rounded-full backdrop-blur-md transition-all ${
-                inCompare ? 'bg-[#B88746] text-white' : 'bg-white/80 hover:bg-white text-slate-700'
+              className={`p-2.5 rounded-full backdrop-blur-md shadow-md transition-all ${
+                inCompare ? 'bg-[#B88746] text-white' : 'bg-white/85 hover:bg-white text-slate-700'
               }`}
               title="Compare"
             >
@@ -72,8 +85,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, layout = '
             </button>
             <button
               onClick={handleFavoriteClick}
-              className={`p-2.5 rounded-full backdrop-blur-md transition-all ${
-                favorite ? 'bg-rose-500 text-white' : 'bg-white/80 hover:bg-white text-slate-700'
+              className={`p-2.5 rounded-full backdrop-blur-md shadow-md transition-all ${
+                favorite ? 'bg-rose-500 text-white' : 'bg-white/85 hover:bg-white text-slate-700'
               }`}
               title="Favorite"
             >
@@ -81,9 +94,9 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, layout = '
             </button>
           </div>
 
-          <div className="absolute bottom-4 left-4 text-white text-xs flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5 text-[#B88746]" />
-            {property.location.neighborhood}, {property.location.city}
+          <div className="absolute bottom-4 left-4 right-4 text-white text-xs flex items-center gap-1.5">
+            <MapPin className="w-3.5 h-3.5 text-[#B88746] flex-shrink-0" />
+            <span className="truncate">{property.location.neighborhood}, {property.location.city}</span>
           </div>
         </div>
 
@@ -154,25 +167,33 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, layout = '
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-        {/* Top Badges */}
-        <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-          <Badge variant={property.purpose === 'rent' ? 'green' : 'gold'}>
-            For {property.purpose}
-          </Badge>
-          {property.isLuxury && <Badge variant="dark">Luxury</Badge>}
+        {/* Top Badges - bounded to avoid overlapping with right action buttons */}
+        <div className="absolute top-4 left-4 right-24 flex flex-wrap gap-1.5 z-10 pointer-events-none">
+          <div className="pointer-events-auto">
+            <Badge variant={property.purpose === 'rent' ? 'green' : 'gold'}>
+              For {property.purpose}
+            </Badge>
+          </div>
+          {property.isLuxury && (
+            <div className="pointer-events-auto">
+              <Badge variant="dark">Luxury</Badge>
+            </div>
+          )}
           {property.isVerified && (
-            <span className="inline-flex items-center gap-1 bg-emerald-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-              <ShieldCheck className="w-3 h-3" /> Verified
-            </span>
+            <div className="pointer-events-auto">
+              <span className="inline-flex items-center gap-1 bg-emerald-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                <ShieldCheck className="w-3 h-3" /> Verified
+              </span>
+            </div>
           )}
         </div>
 
         {/* Action Controls */}
-        <div className="absolute top-4 right-4 flex items-center gap-2">
+        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
           <button
             onClick={handleCompareClick}
-            className={`p-2.5 rounded-full backdrop-blur-md transition-all ${
-              inCompare ? 'bg-[#B88746] text-white' : 'bg-white/80 hover:bg-white text-slate-700'
+            className={`p-2.5 rounded-full backdrop-blur-md shadow-md transition-all ${
+              inCompare ? 'bg-[#B88746] text-white' : 'bg-white/85 hover:bg-white text-slate-700'
             }`}
             title="Compare Property"
           >
@@ -180,8 +201,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, layout = '
           </button>
           <button
             onClick={handleFavoriteClick}
-            className={`p-2.5 rounded-full backdrop-blur-md transition-all ${
-              favorite ? 'bg-rose-500 text-white' : 'bg-white/80 hover:bg-white text-slate-700'
+            className={`p-2.5 rounded-full backdrop-blur-md shadow-md transition-all ${
+              favorite ? 'bg-rose-500 text-white' : 'bg-white/85 hover:bg-white text-slate-700'
             }`}
             title="Favorite"
           >
