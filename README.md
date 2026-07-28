@@ -27,7 +27,7 @@ npm install
 ```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [EstateVista](https://yasir263.github.io/estatevista-real-estate-frontend/)) in your browser.
 
 ---
 
