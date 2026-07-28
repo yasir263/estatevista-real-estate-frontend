@@ -1,0 +1,2 @@
+:HL["/estatevista-real-estate-frontend/_next/static/chunks/3_aei4-tg5hfc.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":20,"slots":{"children":{"name":"properties","param":null,"prefetchHints":0,"slots":{"children":{"name":"id","param":{"type":"d","key":"prop-15","siblings":null},"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}}}},"staleTime":300,"buildId":"qMWmzP_dRTKJaHrKttpmF"}
